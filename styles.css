@@ -120,3 +120,22 @@ body:not(.dashboard-active) .brand{
     height:46px;
   }
 }
+
+
+/* ============================================================
+   Portal v3 — remove dashboard sub-toolbar
+   ============================================================ */
+
+body.dashboard-active .dashboard-toolbar{
+  display:none !important;
+}
+
+/* With the sub-toolbar removed, the embedded dashboard uses all
+   remaining vertical space beneath the top navigation bar. */
+body.dashboard-active .frame-shell{
+  height:calc(100vh - 58px) !important;
+}
+
+body.dashboard-active .dashboard-view{
+  min-height:calc(100vh - 58px);
+}
