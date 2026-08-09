@@ -10,6 +10,7 @@ const frameShell=document.querySelector(".frame-shell");
 
 function setActiveNav(page){navButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.page===page));}
 function showHome(){
+  document.body.classList.remove("dashboard-active");
   $("home-view").classList.remove("hidden");
   $("dashboard-view").classList.add("hidden");
   setActiveNav("home");
@@ -17,6 +18,7 @@ function showHome(){
 }
 function openDashboard(key){
   const d=dashboards[key]; if(!d) return;
+  document.body.classList.add("dashboard-active");
   $("home-view").classList.add("hidden");
   $("dashboard-view").classList.remove("hidden");
   $("dashboard-title").textContent=d.title;

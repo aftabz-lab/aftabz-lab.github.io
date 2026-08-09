@@ -7,6 +7,21 @@ button,a{font:inherit}
 body{overflow:hidden}
 .portal-header{min-height:108px;padding:15px 20px 13px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;background:#0b1218;border-bottom:3px solid #1e8bb8;box-shadow:0 10px 24px rgba(0,0,0,.38);position:relative;z-index:20}
 .eyebrow{color:#78d3f0;font-size:10px;font-weight:900;letter-spacing:1.4px}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.brand-logo{
+  width:112px;
+  height:54px;
+  object-fit:contain;
+  object-position:center;
+  flex:0 0 auto;
+  border-radius:4px;
+}
+.brand-copy{min-width:0}
 .brand h1{margin:4px 0 3px;font-size:27px;line-height:1}
 .brand p{margin:0;color:#a9bac4;font-size:11px}
 .portal-nav{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
@@ -41,3 +56,67 @@ body{overflow:hidden}
 .frame-shell.loaded .frame-loading{display:none}
 .hidden{display:none!important}
 @media(max-width:900px){body{overflow:auto}.portal-header{align-items:flex-start;flex-direction:column}.portal-main{height:auto}.dashboard-grid{grid-template-columns:1fr}.frame-shell{height:78vh}}
+
+
+/* ============================================================
+   Portal v2
+   Home: show Shwapno logo left of the portal title.
+   Dashboard: keep ONLY the navigation buttons at the top right.
+   ============================================================ */
+
+body.dashboard-active .portal-header{
+  min-height:58px;
+  height:58px;
+  padding:6px 12px;
+  justify-content:flex-end;
+  align-items:center;
+  border-bottom-width:2px;
+}
+
+body.dashboard-active .brand{
+  display:none;
+}
+
+body.dashboard-active .portal-nav{
+  margin-left:auto;
+  justify-content:flex-end;
+}
+
+body.dashboard-active .nav-btn{
+  height:42px;
+  padding:0 18px;
+  font-size:14px;
+}
+
+body.dashboard-active .portal-main{
+  height:calc(100vh - 58px);
+}
+
+body.dashboard-active .frame-shell{
+  height:calc(100vh - 58px - 64px);
+}
+
+/* Home header: logo stays to the left of the existing text block. */
+body:not(.dashboard-active) .brand{
+  display:flex;
+}
+
+@media(max-width:900px){
+  body.dashboard-active .portal-header{
+    min-height:auto;
+    height:auto;
+    flex-direction:row;
+    align-items:center;
+  }
+  body.dashboard-active .portal-nav{
+    width:100%;
+    justify-content:flex-end;
+  }
+  body.dashboard-active .portal-main{
+    height:auto;
+  }
+  .brand-logo{
+    width:94px;
+    height:46px;
+  }
+}
