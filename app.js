@@ -1,7 +1,8 @@
 const dashboards={
   zreport:{title:"Z-Report Category-Wise Sales & Footfall",kicker:"Z-REPORT",url:"/zreport-dual-dashboard/"},
   visit:{title:"Visit Compliance Dashboard",kicker:"VISIT COMPLIANCE",url:"/visit-compliance-dashboard/"},
-  zone:{title:"Zone Distribution Dashboard",kicker:"ZONE DISTRIBUTION",url:"/zone-distribution-dashboard/"}
+  zone:{title:"Zone Distribution Dashboard",kicker:"ZONE DISTRIBUTION",url:"/zone-distribution-dashboard/"},
+  feasibility:{title:"Feasibility Command Center",kicker:"FEASIBILITY",url:"/feasibility-dashboard/"}
 };
 const $=id=>document.getElementById(id);
 const navButtons=[...document.querySelectorAll(".nav-btn")];

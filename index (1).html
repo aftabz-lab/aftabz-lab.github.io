@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Shwapno Operations Intelligence Portal</title>
+  <link rel="stylesheet" href="styles.css?v=portal-v3-no-subtoolbar-20260809">
+</head>
+<body>
+  <header class="portal-header">
+    <div class="brand">
+      <img class="brand-logo" src="shwapno-logo.jpeg" alt="Shwapno logo">
+      <div class="brand-copy">
+        <div class="eyebrow">SHWAPNO OPERATIONS INTELLIGENCE</div>
+        <h1>Dashboard Portal</h1>
+        <p>One access point for operational dashboards</p>
+      </div>
+    </div>
+
+    <nav class="portal-nav" aria-label="Dashboard navigation">
+      <button class="nav-btn active" data-page="home">Home</button>
+      <button class="nav-btn" data-page="zreport">Z-Report</button>
+      <button class="nav-btn" data-page="visit">Visit Compliance</button>
+      <button class="nav-btn" data-page="zone">Zone Distribution</button>
+      <button class="nav-btn" data-page="feasibility">Feasibility</button>
+    </nav>
+  </header>
+
+  <main class="portal-main">
+    <section id="home-view" class="home-view">
+      <div class="hero">
+        <div class="hero-kicker">CENTRAL ACCESS</div>
+        <h2>Select a dashboard</h2>
+        <p>The selected dashboard will open below within this same portal.</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <button class="dashboard-card" data-open="zreport">
+          <span class="card-no">01</span>
+          <span class="card-title">Z-Report Dashboard</span>
+          <span class="card-desc">Category-wise sales, footfall and projected ZREPORT</span>
+          <span class="card-action">Open dashboard →</span>
+        </button>
+
+        <button class="dashboard-card" data-open="visit">
+          <span class="card-no">02</span>
+          <span class="card-title">Visit Compliance Dashboard</span>
+          <span class="card-desc">Officer-wise visit planning, responses and compliance</span>
+          <span class="card-action">Open dashboard →</span>
+        </button>
+
+        <button class="dashboard-card" data-open="zone">
+          <span class="card-no">03</span>
+          <span class="card-title">Zone Distribution Dashboard</span>
+          <span class="card-desc">Outlet network, RHO, zonal, format and location intelligence</span>
+          <span class="card-action">Open dashboard →</span>
+        </button>
+
+        <button class="dashboard-card" data-open="feasibility">
+          <span class="card-no">04</span>
+          <span class="card-title">Feasibility Command Center</span>
+          <span class="card-desc">Site scoring, sales projection and feasibility workbook export</span>
+          <span class="card-action">Open dashboard →</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard-view hidden">
+      <div class="dashboard-toolbar">
+        <div>
+          <div id="dashboard-kicker" class="toolbar-kicker">DASHBOARD</div>
+          <h2 id="dashboard-title">Dashboard</h2>
+        </div>
+        <div class="toolbar-actions">
+          <button id="back-home" class="toolbar-btn">Home</button>
+          <a id="open-direct" class="toolbar-btn primary" href="/" target="_blank" rel="noopener">Open full page</a>
+        </div>
+      </div>
+
+      <div class="frame-shell">
+        <div id="frame-loading" class="frame-loading">Loading dashboard…</div>
+        <iframe id="dashboard-frame" title="Selected dashboard" src="about:blank" loading="eager"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js?v=portal-v4-feasibility-20260812"></script>
+</body>
+</html>
