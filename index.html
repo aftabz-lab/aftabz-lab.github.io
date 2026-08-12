@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Shwapno Operations Intelligence Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-v3-no-subtoolbar-20260809">
+  <link rel="stylesheet" href="styles.css?v=portal-v5-new-tabs-20260812">
 </head>
 <body>
   <header class="portal-header">
@@ -19,11 +19,11 @@
     </div>
 
     <nav class="portal-nav" aria-label="Dashboard navigation">
-      <button class="nav-btn active" data-page="home">Home</button>
-      <button class="nav-btn" data-page="zreport">Z-Report</button>
-      <button class="nav-btn" data-page="visit">Visit Compliance</button>
-      <button class="nav-btn" data-page="zone">Zone Distribution</button>
-      <button class="nav-btn" data-page="feasibility">Feasibility</button>
+      <a class="nav-btn active" href="/" target="_blank" rel="noopener noreferrer">Home</a>
+      <a class="nav-btn" href="/zreport-dual-dashboard/" target="_blank" rel="noopener noreferrer">Z-Report</a>
+      <a class="nav-btn" href="/visit-compliance-dashboard/" target="_blank" rel="noopener noreferrer">Visit Compliance</a>
+      <a class="nav-btn" href="/zone-distribution-dashboard/" target="_blank" rel="noopener noreferrer">Zone Distribution</a>
+      <a class="nav-btn" href="/feasibility-dashboard/" target="_blank" rel="noopener noreferrer">Feasibility</a>
     </nav>
   </header>
 
@@ -32,59 +32,39 @@
       <div class="hero">
         <div class="hero-kicker">CENTRAL ACCESS</div>
         <h2>Select a dashboard</h2>
-        <p>The selected dashboard will open below within this same portal.</p>
+        <p>Every dashboard opens in a new browser tab.</p>
       </div>
 
       <div class="dashboard-grid">
-        <button class="dashboard-card" data-open="zreport">
+        <a class="dashboard-card" href="/zreport-dual-dashboard/" target="_blank" rel="noopener noreferrer">
           <span class="card-no">01</span>
           <span class="card-title">Z-Report Dashboard</span>
           <span class="card-desc">Category-wise sales, footfall and projected ZREPORT</span>
           <span class="card-action">Open dashboard →</span>
-        </button>
+        </a>
 
-        <button class="dashboard-card" data-open="visit">
+        <a class="dashboard-card" href="/visit-compliance-dashboard/" target="_blank" rel="noopener noreferrer">
           <span class="card-no">02</span>
           <span class="card-title">Visit Compliance Dashboard</span>
           <span class="card-desc">Officer-wise visit planning, responses and compliance</span>
           <span class="card-action">Open dashboard →</span>
-        </button>
+        </a>
 
-        <button class="dashboard-card" data-open="zone">
+        <a class="dashboard-card" href="/zone-distribution-dashboard/" target="_blank" rel="noopener noreferrer">
           <span class="card-no">03</span>
           <span class="card-title">Zone Distribution Dashboard</span>
           <span class="card-desc">Outlet network, RHO, zonal, format and location intelligence</span>
           <span class="card-action">Open dashboard →</span>
-        </button>
+        </a>
 
-        <button class="dashboard-card" data-open="feasibility">
+        <a class="dashboard-card" href="/feasibility-dashboard/" target="_blank" rel="noopener noreferrer">
           <span class="card-no">04</span>
           <span class="card-title">Feasibility Command Center</span>
           <span class="card-desc">Site scoring, sales projection and feasibility workbook export</span>
           <span class="card-action">Open dashboard →</span>
-        </button>
-      </div>
-    </section>
-
-    <section id="dashboard-view" class="dashboard-view hidden">
-      <div class="dashboard-toolbar">
-        <div>
-          <div id="dashboard-kicker" class="toolbar-kicker">DASHBOARD</div>
-          <h2 id="dashboard-title">Dashboard</h2>
-        </div>
-        <div class="toolbar-actions">
-          <button id="back-home" class="toolbar-btn">Home</button>
-          <a id="open-direct" class="toolbar-btn primary" href="/" target="_blank" rel="noopener">Open full page</a>
-        </div>
-      </div>
-
-      <div class="frame-shell">
-        <div id="frame-loading" class="frame-loading">Loading dashboard…</div>
-        <iframe id="dashboard-frame" title="Selected dashboard" src="about:blank" loading="eager"></iframe>
+        </a>
       </div>
     </section>
   </main>
-
-  <script src="app.js?v=portal-v4-feasibility-20260812"></script>
 </body>
 </html>
