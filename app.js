@@ -2,7 +2,7 @@ const dashboards={
   zreport:{title:"Z-Report Category-Wise Sales & Footfall",kicker:"Z-REPORT",url:"/zreport-dual-dashboard/"},
   visit:{title:"Visit Compliance Dashboard",kicker:"VISIT COMPLIANCE",url:"/visit-compliance-dashboard/"},
   zone:{title:"Zone Distribution Dashboard",kicker:"ZONE DISTRIBUTION",url:"/zone-distribution-dashboard/"},
-  feasibility:{title:"Feasibility Command Center",kicker:"FEASIBILITY",url:"/feasibility-dashboard/"}
+  feasibility:{title:"Feasibility Command Center",kicker:"FEASIBILITY",url:"https://aftabz-lab.github.io/Feasibility_FInal/"}  // lives in the aftabz-lab account, repo Feasibility_FInal
 };
 const $=id=>document.getElementById(id);
 const navButtons=[...document.querySelectorAll(".nav-btn")];
