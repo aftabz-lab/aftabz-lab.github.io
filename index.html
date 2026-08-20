@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Shwapno Operations Intelligence Portal</title>
+  <style>html:not(.drive-owner) [data-drive-owner-only] { display: none !important; }</style>
+  <script src="drive-owner-mode.js?v=owner-device-v1"></script>
   <link rel="stylesheet" href="styles.css?v=portal-v6-shared-google-drive-20260820">
 </head>
 <body>
@@ -24,7 +26,7 @@
       <a class="nav-btn" href="/visit-compliance-dashboard/" target="_blank" rel="noopener noreferrer">Visit Compliance</a>
       <a class="nav-btn" href="/zone-distribution-dashboard/" target="_blank" rel="noopener noreferrer">Zone Distribution</a>
       <a class="nav-btn" href="https://aftabz-lab.github.io/Feasibility_FInal/" target="_blank" rel="noopener noreferrer">Feasibility</a>
-      <button id="drive-setup" class="nav-btn drive-btn" type="button">Drive setup</button>
+      <button id="drive-setup" class="nav-btn drive-btn" type="button" data-drive-owner-only>Drive setup</button>
     </nav>
   </header>
 
@@ -36,7 +38,7 @@
         <p>Every dashboard opens in a new browser tab.</p>
       </div>
 
-      <section class="drive-card" aria-live="polite">
+      <section class="drive-card" aria-live="polite" data-drive-owner-only>
         <div>
           <div class="hero-kicker">SHARED DATA SOURCE</div>
           <h3>Google Drive cloud folder</h3>
@@ -44,8 +46,8 @@
         </div>
         <div class="drive-actions">
           <span id="drive-status" class="drive-status" data-kind="idle">CHECKING</span>
-          <button id="drive-connect" class="drive-action primary" type="button">Connect saved folder</button>
-          <button id="drive-change" class="drive-action" type="button">Change folder</button>
+          <button id="drive-connect" class="drive-action primary" type="button" data-drive-owner-only>Connect saved folder</button>
+          <button id="drive-change" class="drive-action" type="button" data-drive-owner-only>Change folder</button>
         </div>
       </section>
 
@@ -81,7 +83,7 @@
     </section>
   </main>
 
-  <div id="drive-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title" hidden>
+  <div id="drive-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title" hidden data-drive-owner-only>
     <section class="drive-modal">
       <div class="modal-head">
         <div>
