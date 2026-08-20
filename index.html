@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Shwapno Operations Intelligence Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-v5-new-tabs-20260812">
+  <link rel="stylesheet" href="styles.css?v=portal-v6-shared-google-drive-20260820">
 </head>
 <body>
   <header class="portal-header">
@@ -24,6 +24,7 @@
       <a class="nav-btn" href="/visit-compliance-dashboard/" target="_blank" rel="noopener noreferrer">Visit Compliance</a>
       <a class="nav-btn" href="/zone-distribution-dashboard/" target="_blank" rel="noopener noreferrer">Zone Distribution</a>
       <a class="nav-btn" href="https://aftabz-lab.github.io/Feasibility_FInal/" target="_blank" rel="noopener noreferrer">Feasibility</a>
+      <button id="drive-setup" class="nav-btn drive-btn" type="button">Drive setup</button>
     </nav>
   </header>
 
@@ -34,6 +35,19 @@
         <h2>Select a dashboard</h2>
         <p>Every dashboard opens in a new browser tab.</p>
       </div>
+
+      <section class="drive-card" aria-live="polite">
+        <div>
+          <div class="hero-kicker">SHARED DATA SOURCE</div>
+          <h3>Google Drive cloud folder</h3>
+          <p id="drive-detail">Checking the folder already selected for Zone Distribution…</p>
+        </div>
+        <div class="drive-actions">
+          <span id="drive-status" class="drive-status" data-kind="idle">CHECKING</span>
+          <button id="drive-connect" class="drive-action primary" type="button">Connect saved folder</button>
+          <button id="drive-change" class="drive-action" type="button">Change folder</button>
+        </div>
+      </section>
 
       <div class="dashboard-grid">
         <a class="dashboard-card" href="/zreport-dual-dashboard/" target="_blank" rel="noopener noreferrer">
@@ -66,5 +80,31 @@
       </div>
     </section>
   </main>
+
+  <div id="drive-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title" hidden>
+    <section class="drive-modal">
+      <div class="modal-head">
+        <div>
+          <div class="hero-kicker">ONE-TIME BROWSER SETUP</div>
+          <h2 id="drive-modal-title">Google Drive cloud setup</h2>
+        </div>
+        <button id="drive-modal-close" class="modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <p>These three public Google Cloud values are shared with Zone Distribution, Z-Report, Visit Compliance and Audit on this browser. Feasibility remains separate.</p>
+      <div class="setup-grid">
+        <label>OAuth Client ID<input id="google-client-id" type="text" autocomplete="off" placeholder="1234567890-abc123.apps.googleusercontent.com"></label>
+        <label>API Key<input id="google-api-key" type="text" autocomplete="off" placeholder="AIza..."></label>
+        <label>Project Number / App ID<input id="google-app-id" type="text" inputmode="numeric" autocomplete="off" placeholder="123456789012"></label>
+      </div>
+      <div class="setup-note"><strong>Authorized JavaScript origin:</strong> https://aftabz-lab.github.io<br><strong>Required APIs:</strong> Google Drive API and Google Picker API<br><strong>OAuth scope:</strong> Drive read-only. No client secret is used.</div>
+      <div class="modal-actions">
+        <button id="drive-clear" class="drive-action danger" type="button">Clear shared setup</button>
+        <button id="drive-save" class="drive-action primary" type="button">Save &amp; select folder</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="google-drive-source.js?v=shared-drive-v1"></script>
+  <script src="app.js?v=portal-v6-shared-google-drive-20260820"></script>
 </body>
 </html>

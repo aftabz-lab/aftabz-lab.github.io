@@ -1,39 +1,91 @@
-const dashboards={
-  zreport:{title:"Z-Report Category-Wise Sales & Footfall",kicker:"Z-REPORT",url:"/zreport-dual-dashboard/"},
-  visit:{title:"Visit Compliance Dashboard",kicker:"VISIT COMPLIANCE",url:"/visit-compliance-dashboard/"},
-  zone:{title:"Zone Distribution Dashboard",kicker:"ZONE DISTRIBUTION",url:"/zone-distribution-dashboard/"},
-  feasibility:{title:"Feasibility Command Center",kicker:"FEASIBILITY",url:"https://aftabz-lab.github.io/Feasibility_FInal/"}  // lives in the aftabz-lab account, repo Feasibility_FInal
-};
-const $=id=>document.getElementById(id);
-const navButtons=[...document.querySelectorAll(".nav-btn")];
-const frame=$("dashboard-frame");
-const frameShell=document.querySelector(".frame-shell");
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const Drive = window.ShwapnoDrive;
 
-function setActiveNav(page){navButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.page===page));}
-function showHome(){
-  document.body.classList.remove("dashboard-active");
-  $("home-view").classList.remove("hidden");
-  $("dashboard-view").classList.add("hidden");
-  setActiveNav("home");
-  history.replaceState(null,"",location.pathname);
-}
-function openDashboard(key){
-  const d=dashboards[key]; if(!d) return;
-  document.body.classList.add("dashboard-active");
-  $("home-view").classList.add("hidden");
-  $("dashboard-view").classList.remove("hidden");
-  $("dashboard-title").textContent=d.title;
-  $("dashboard-kicker").textContent=d.kicker;
-  $("open-direct").href=d.url;
-  setActiveNav(key);
-  frameShell.classList.remove("loaded");
-  if(frame.getAttribute("src")!==d.url) frame.setAttribute("src",d.url);
-  else frameShell.classList.add("loaded");
-  history.replaceState(null,"",`#${key}`);
-}
-frame.addEventListener("load",()=>frameShell.classList.add("loaded"));
-navButtons.forEach(btn=>btn.addEventListener("click",()=>btn.dataset.page==="home"?showHome():openDashboard(btn.dataset.page)));
-document.querySelectorAll("[data-open]").forEach(card=>card.addEventListener("click",()=>openDashboard(card.dataset.open)));
-$("back-home").addEventListener("click",showHome);
-const initial=location.hash.replace("#","");
-if(dashboards[initial]) openDashboard(initial); else showHome();
+  function setStatus(kind, label, detail) {
+    const badge = $("drive-status");
+    badge.dataset.kind = kind;
+    badge.textContent = label;
+    $("drive-detail").textContent = detail;
+  }
+
+  function refreshView(note = "") {
+    const info = Drive.describe();
+    $("drive-connect").hidden = !info.folder;
+    $("drive-change").textContent = info.folder ? "Change folder" : "Set up Drive";
+    if (info.folder && info.authorized) {
+      setStatus("live", "CONNECTED", note || `Shared folder: ${info.folder.name}. New dashboard tabs will reuse it automatically.`);
+    } else if (info.folder) {
+      setStatus("ready", "FOLDER SAVED", note || `Shared folder: ${info.folder.name}. Click Connect saved folder once to authorize this browser session.`);
+    } else if (info.configReady) {
+      setStatus("idle", "SELECT FOLDER", note || "Google Cloud setup is saved, but no shared Drive folder is selected yet.");
+    } else {
+      setStatus("idle", "SETUP REQUIRED", note || "Use Drive setup once. The same folder will be used by all supported dashboards except Feasibility.");
+    }
+  }
+
+  function openModal() {
+    const config = Drive.getConfig();
+    $("google-client-id").value = config.clientId;
+    $("google-api-key").value = config.apiKey;
+    $("google-app-id").value = config.appId;
+    $("drive-modal").hidden = false;
+  }
+
+  function closeModal() { $("drive-modal").hidden = true; }
+
+  async function connectSaved() {
+    if (!Drive.configReady()) return openModal();
+    if (!Drive.getFolder()) return connectAndPick();
+    try {
+      setStatus("reading", "CONNECTING", "Authorizing Google Drive read-only access…");
+      const result = await Drive.connect({ pickFolder: false });
+      if (result) refreshView(`Connected to “${result.folder.name}”. Open any supported dashboard; it will use this same folder.`);
+    } catch (error) {
+      if (error?.name === "AbortError") return refreshView("Google Drive sign-in was cancelled.");
+      setStatus("error", "CONNECTION ERROR", error?.message || "Google Drive connection failed.");
+    }
+  }
+
+  async function connectAndPick() {
+    if (!Drive.configReady()) return openModal();
+    try {
+      setStatus("reading", "CONNECTING", "Authorizing Google Drive and opening the folder picker…");
+      const result = await Drive.connect({ pickFolder: true, title: "Select shared Shwapno dashboard data folder" });
+      if (result) refreshView(`Shared folder changed to “${result.folder.name}”. Zone Distribution, Z-Report, Visit Compliance and Audit will reuse it.`);
+      else refreshView("Folder selection was cancelled; the previous folder was kept.");
+    } catch (error) {
+      if (error?.name === "AbortError") return refreshView("Google Drive sign-in was cancelled.");
+      setStatus("error", "CONNECTION ERROR", error?.message || "Google Drive connection failed.");
+    }
+  }
+
+  $("drive-setup").addEventListener("click", openModal);
+  $("drive-change").addEventListener("click", () => Drive.configReady() ? connectAndPick() : openModal());
+  $("drive-connect").addEventListener("click", connectSaved);
+  $("drive-modal-close").addEventListener("click", closeModal);
+  $("drive-modal").addEventListener("click", event => { if (event.target === $("drive-modal")) closeModal(); });
+  $("drive-save").addEventListener("click", () => {
+    try {
+      Drive.saveConfig({
+        clientId: $("google-client-id").value,
+        apiKey: $("google-api-key").value,
+        appId: $("google-app-id").value,
+      });
+      closeModal();
+      setTimeout(connectAndPick, 0);
+    } catch (error) { alert(error.message); }
+  });
+  $("drive-clear").addEventListener("click", () => {
+    if (!confirm("Clear the shared Google Drive setup for all supported dashboards on this browser?")) return;
+    Drive.clearSetup();
+    closeModal();
+    refreshView("Shared Google Drive setup was cleared.");
+  });
+
+  window.addEventListener("storage", event => {
+    if (Object.values(Drive.KEYS).includes(event.key)) refreshView();
+  });
+  refreshView();
+})();
