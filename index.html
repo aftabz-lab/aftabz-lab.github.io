@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Shwapno Operations Intelligence Portal</title>
-  <style>html:not(.drive-owner) [data-drive-owner-only] { display: none !important; }</style>
+  <style>
+    html:not(.drive-owner) [data-drive-owner-only] { display: none !important; }
+  </style>
   <script src="drive-owner-mode.js?v=owner-device-v1"></script>
-  <link rel="stylesheet" href="styles.css?v=portal-v6-shared-google-drive-20260820">
+  <link rel="stylesheet" href="styles.css?v=portal-v7-private-source-20260821">
 </head>
 <body>
   <header class="portal-header">
@@ -48,6 +50,19 @@
           <span id="drive-status" class="drive-status" data-kind="idle">CHECKING</span>
           <button id="drive-connect" class="drive-action primary" type="button" data-drive-owner-only>Connect saved folder</button>
           <button id="drive-change" class="drive-action" type="button" data-drive-owner-only>Change folder</button>
+        </div>
+      </section>
+
+      <section class="snapshot-times-card" aria-live="polite" data-public-snapshot>
+        <div>
+          <div class="hero-kicker">LAST SNAPSHOT TAKEN</div>
+          <h3>Published dashboard data</h3>
+        </div>
+        <div class="snapshot-times-grid">
+          <div class="snapshot-time-item"><span>Z-Report</span><strong data-snapshot-key="zreport">Checking…</strong></div>
+          <div class="snapshot-time-item"><span>Zone Distribution</span><strong data-snapshot-key="zone-distribution">Checking…</strong></div>
+          <div class="snapshot-time-item"><span>Visit Compliance</span><strong data-snapshot-key="visit">Checking…</strong></div>
+          <div class="snapshot-time-item"><span>Audit Quality</span><strong data-snapshot-key="audit">Checking…</strong></div>
         </div>
       </section>
 
@@ -107,6 +122,7 @@
   </div>
 
   <script src="google-drive-source.js?v=shared-drive-v1"></script>
-  <script src="app.js?v=portal-v6-shared-google-drive-20260820"></script>
+  <script src="app.js?v=portal-v7-private-source-20260821"></script>
+  <script type="module" src="snapshot-times.js?v=portal-v7-private-source-20260821"></script>
 </body>
 </html>
