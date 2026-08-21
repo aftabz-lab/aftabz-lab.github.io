@@ -2,6 +2,52 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const Drive = window.ShwapnoDrive;
+  const SNAPSHOT_WORKER_REFRESH_MS = 1000;
+  const SNAPSHOT_WORKERS = Object.freeze([
+    ["zone-distribution", "/zone-distribution-dashboard/?snapshot-worker=1"],
+    ["zreport", "/zreport-dual-dashboard/?snapshot-worker=1"],
+    ["visit", "/visit-compliance-dashboard/?snapshot-worker=1"],
+    ["audit", "/visit-compliance-dashboard/audit.html?snapshot-worker=1"],
+  ]);
+  let snapshotWorkerHost = null;
+
+  function snapshotWorkerReady() {
+    return Boolean(window.DashboardDriveOwner?.isOwner?.() && Drive.getFolder() && Drive.cachedToken());
+  }
+
+  function stopSnapshotWorkers() {
+    snapshotWorkerHost?.remove();
+    snapshotWorkerHost = null;
+  }
+
+  function updateSnapshotWorkers() {
+    if (!snapshotWorkerReady()) return stopSnapshotWorkers();
+    if (snapshotWorkerHost) return;
+    const host = document.createElement("div");
+    host.id = "snapshot-worker-host";
+    host.setAttribute("aria-hidden", "true");
+    Object.assign(host.style, {
+      position: "fixed",
+      width: "1px",
+      height: "1px",
+      left: "-10000px",
+      top: "0",
+      overflow: "hidden",
+      pointerEvents: "none",
+      opacity: "0",
+    });
+    for (const [name, src] of SNAPSHOT_WORKERS) {
+      const frame = document.createElement("iframe");
+      frame.src = src;
+      frame.name = `snapshot-worker-${name}`;
+      frame.title = `${name} snapshot monitor`;
+      frame.tabIndex = -1;
+      frame.loading = "eager";
+      host.append(frame);
+    }
+    document.body.append(host);
+    snapshotWorkerHost = host;
+  }
 
   function setStatus(kind, label, detail) {
     const badge = $("drive-status");
@@ -85,7 +131,14 @@
   });
 
   window.addEventListener("storage", event => {
-    if (Object.values(Drive.KEYS).includes(event.key)) refreshView();
+    if (Object.values(Drive.KEYS).includes(event.key)) {
+      refreshView();
+      updateSnapshotWorkers();
+    }
   });
+  window.addEventListener("drive-owner-mode-change", updateSnapshotWorkers);
   refreshView();
+  window.DashboardDriveOwner?.ready?.then(updateSnapshotWorkers);
+  updateSnapshotWorkers();
+  setInterval(updateSnapshotWorkers, SNAPSHOT_WORKER_REFRESH_MS);
 })();
