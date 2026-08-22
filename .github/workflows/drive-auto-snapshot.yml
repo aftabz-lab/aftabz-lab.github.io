@@ -1,0 +1,59 @@
+name: Automatic Drive snapshots
+
+on:
+  repository_dispatch:
+    types: [drive_raw_data_changed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automatic-drive-snapshots
+  cancel-in-progress: true
+
+jobs:
+  publish-snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out snapshot worker
+        uses: actions/checkout@v4
+
+      - name: Check out dashboard source repositories
+        shell: bash
+        run: |
+          mkdir -p snapshot-worker/repos
+          git clone --depth 1 https://github.com/aftabz-lab/zone-distribution-dashboard.git snapshot-worker/repos/zone
+          git clone --depth 1 https://github.com/aftabz-lab/zreport-dual-dashboard.git snapshot-worker/repos/zreport
+          git clone --depth 1 https://github.com/aftabz-lab/visit-compliance-dashboard.git snapshot-worker/repos/visit
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: snapshot-worker/package-lock.json
+
+      - name: Install snapshot worker
+        working-directory: snapshot-worker
+        run: npm ci --no-audit --no-fund
+
+      - name: Install headless Chromium
+        working-directory: snapshot-worker
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate file routing
+        working-directory: snapshot-worker
+        run: npm run self-test
+
+      - name: Build and publish affected snapshots
+        working-directory: snapshot-worker
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          SUPABASE_PUBLISHER_EMAIL: ${{ secrets.SUPABASE_PUBLISHER_EMAIL }}
+          SUPABASE_PUBLISHER_PASSWORD: ${{ secrets.SUPABASE_PUBLISHER_PASSWORD }}
+          DRIVE_CHANGE_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: npm run snapshot
