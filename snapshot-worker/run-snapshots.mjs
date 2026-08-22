@@ -75,9 +75,11 @@ function parseChangePayload() {
   };
 }
 
-function targetsForChange(change) {
+function targetsForChange(
+  change,
+  manual = clean(process.env.GITHUB_EVENT_NAME) === "workflow_dispatch",
+) {
   const categories = new Set(change.changed_categories || []);
-  const manual = clean(process.env.GITHUB_EVENT_NAME) === "workflow_dispatch";
   const all = manual || categories.size === 0;
   const targets = [];
   if (all || categories.has("zone")) targets.push("zone");
@@ -400,7 +402,13 @@ async function selfTest() {
       throw new Error(`Classification failed for ${file}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`);
     }
   }
-  const targets = targetsForChange({ changed_categories: ["response", "attendance"] });
+  // Keep this routing assertion independent of the workflow event that happens
+  // to be running the self-test. A manual workflow run intentionally targets
+  // every dashboard, while this assertion checks category-only routing.
+  const targets = targetsForChange(
+    { changed_categories: ["response", "attendance"] },
+    false,
+  );
   if (JSON.stringify(targets) !== JSON.stringify(["visit", "audit"])) {
     throw new Error(`Target selection failed: ${JSON.stringify(targets)}`);
   }
