@@ -322,6 +322,22 @@ async function runPage(browser, baseUrl, name, initialTimes, auth) {
   console.log(`\n[${name}] Opening ${definition.path}`);
   await page.goto(`${baseUrl}${definition.path}`, { waitUntil: "domcontentloaded", timeout: 120000 });
 
+  // Zone Distribution restores the shared snapshot before checking Drive. If
+  // that shared snapshot already has the same remote file signature, its
+  // silent startup check deliberately leaves the badge as "retained" even
+  // though the injected Drive token and folder are valid. Trigger the page's
+  // non-interactive reconnect handler so it confirms the live Drive state (or
+  // processes a changed workbook) without opening OAuth or Picker UI.
+  if (name === "zone") {
+    await page.waitForFunction(
+      () => typeof document.getElementById("allowFolder")?.onclick === "function",
+      undefined,
+      { timeout: 30000 },
+    );
+    await page.evaluate(() => document.getElementById("allowFolder")?.click());
+    console.log("[zone] Requested an immediate Google Drive refresh.");
+  }
+
   const started = Date.now();
   let lastLog = 0;
   let lastStatus = { kind: "", text: "" };
