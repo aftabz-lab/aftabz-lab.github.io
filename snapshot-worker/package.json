@@ -1,0 +1,14 @@
+{
+  "name": "shwapno-unattended-snapshot-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless Google Drive snapshot publisher for the Shwapno dashboards",
+  "scripts": {
+    "snapshot": "node run-snapshots.mjs",
+    "self-test": "node run-snapshots.mjs --self-test"
+  },
+  "dependencies": {
+    "playwright": "1.55.0"
+  }
+}
