@@ -1,6 +1,11 @@
 name: Automatic Drive snapshots
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - "snapshot-worker/**"
+      - ".github/workflows/drive-auto-snapshot.yml"
   repository_dispatch:
     types: [drive_raw_data_changed]
   workflow_dispatch:
