@@ -20,6 +20,7 @@ const OWNER_KEY = "shwapno-drive-owner-device-v1";
 const DEFAULT_TIMEOUT_MS = 35 * 60 * 1000;
 const ZONE_SNAPSHOT_KEY = "zone-distribution";
 const ZONE_SCHEMA_FORMAT = "zone-required-headers-v1";
+const VISIT_DRIVE_FOLDER_ID = "16HTr8nfPz4P2PMr4QB0bjgwiD110Qd-0";
 
 const MIME = Object.freeze({
   ".css": "text/css; charset=utf-8",
@@ -46,6 +47,19 @@ const ROUTES = Object.freeze([
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+export function visitSnapshotUsesDriveOnly(payload, folderId = VISIT_DRIVE_FOLDER_ID) {
+  const data = payload?.data || payload?.visitDashboard || null;
+  const metadata = data?.metadata || null;
+  return Boolean(
+    metadata
+      && metadata.localSource === true
+      && clean(metadata.driveFolderId) === clean(folderId)
+      && clean(metadata.scheduleSource) === "selected Google Drive folder"
+      && clean(metadata.responseFile)
+      && clean(metadata.scheduleFile)
+  );
 }
 
 export function classifyFile(name) {
@@ -84,7 +98,7 @@ function targetsForChange(
   eventName = clean(process.env.GITHUB_EVENT_NAME),
 ) {
   const categories = new Set(change.changed_categories || []);
-  if (eventName === "push" && categories.size === 0) return ["zone"];
+  if (eventName === "push" && categories.size === 0) return ["zone", "visit"];
   const all = manual || categories.size === 0;
   const targets = [];
   if (all || categories.has("zone")) targets.push("zone");
@@ -559,7 +573,7 @@ async function runPage(browser, baseUrl, name, initialTimes, auth) {
     viewport: { width: 1440, height: 1000 },
     serviceWorkers: "block",
   });
-  await context.addInitScript(({ folderId, driveToken, driveExpiresAt, session, keys }) => {
+  await context.addInitScript(({ folderId, driveToken, driveExpiresAt, session, keys, enforceVisitDriveOnly }) => {
     localStorage.setItem(keys.folderId, folderId);
     localStorage.setItem(keys.folderName, "Automated raw-data folder");
     localStorage.setItem(keys.driveToken, driveToken);
@@ -567,6 +581,39 @@ async function runPage(browser, baseUrl, name, initialTimes, auth) {
     localStorage.setItem(keys.session, JSON.stringify(session));
     localStorage.setItem(keys.owner, "enabled");
     localStorage.removeItem(keys.sync);
+
+    // The unattended Visit publisher must never create a fresh cloud snapshot
+    // with a visit plan inherited from repository-built dashboard data.  Let
+    // the page keep its last good snapshot, but reject the cloud write unless
+    // both response and schedule metadata confirm the requested Drive folder.
+    if (enforceVisitDriveOnly) {
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = async (input, init = {}) => {
+        const url = typeof input === "string" ? input : String(input?.url || "");
+        const method = String(init?.method || input?.method || "GET").toUpperCase();
+        if (method === "POST" && /\/rest\/v1\/dashboard_snapshots(?:\?|$)/.test(url)) {
+          let record = null;
+          try { record = typeof init?.body === "string" ? JSON.parse(init.body) : null; }
+          catch { record = null; }
+          if (record?.snapshot_key === "visit") {
+            const data = record?.payload?.data || record?.payload?.visitDashboard || null;
+            const metadata = data?.metadata || null;
+            const driveOnly = Boolean(
+              metadata
+                && metadata.localSource === true
+                && String(metadata.driveFolderId || "").trim() === folderId
+                && String(metadata.scheduleSource || "").trim() === "selected Google Drive folder"
+                && String(metadata.responseFile || "").trim()
+                && String(metadata.scheduleFile || "").trim()
+            );
+            if (!driveOnly) {
+              throw new Error(`Drive source error: Visit snapshot rejected. Both the response export and Zonal/RHO visit plan must come from Google Drive folder ${folderId}; repository data is not accepted.`);
+            }
+          }
+        }
+        return nativeFetch(input, init);
+      };
+    }
   }, {
     folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
     driveToken: auth.drive.accessToken,
@@ -581,6 +628,7 @@ async function runPage(browser, baseUrl, name, initialTimes, auth) {
       sync: SYNC_KEY,
       owner: OWNER_KEY,
     },
+    enforceVisitDriveOnly: name === "visit",
   });
 
   const page = await context.newPage();
@@ -607,6 +655,17 @@ async function runPage(browser, baseUrl, name, initialTimes, auth) {
     if (isErrorStatus(lastStatus)) {
       throw new Error(`${name} parser reported: ${clean(lastStatus.text).slice(0, 600)}`);
     }
+
+    const failedSyncMessage = await page.evaluate(key => {
+      try {
+        const statuses = JSON.parse(localStorage.getItem(key) || "{}");
+        return Object.entries(statuses || {})
+          .filter(([, value]) => value?.ok === false)
+          .map(([snapshotKey, value]) => `${snapshotKey}: ${value.reason || "publish-failed"}`)
+          .join("; ");
+      } catch { return ""; }
+    }, SYNC_KEY);
+    if (failedSyncMessage) throw new Error(`${name} cloud publish failed: ${failedSyncMessage}`);
 
     const currentTimes = await snapshotTimes(definition.keys);
     changedKeys = definition.keys.filter(key => currentTimes[key] && currentTimes[key] !== initialTimes[key]);
@@ -685,8 +744,24 @@ async function selfTest() {
     throw new Error(`Target selection failed: ${JSON.stringify(targets)}`);
   }
   const pushTargets = targetsForChange({ changed_categories: [] }, false, "push");
-  if (JSON.stringify(pushTargets) !== JSON.stringify(["zone"])) {
+  if (JSON.stringify(pushTargets) !== JSON.stringify(["zone", "visit"])) {
     throw new Error(`Push target selection failed: ${JSON.stringify(pushTargets)}`);
+  }
+
+  const driveOnlyVisit = {
+    data: {
+      metadata: {
+        localSource: true,
+        driveFolderId: VISIT_DRIVE_FOLDER_ID,
+        scheduleSource: "selected Google Drive folder",
+        responseFile: "Store_Operations_Compliance_Audit_responses_2026-09-01.xlsx",
+        scheduleFile: "Master_Github_Compiled Visit Schedule_September 2026_Both.xlsx",
+      },
+    },
+  };
+  if (!visitSnapshotUsesDriveOnly(driveOnlyVisit)
+      || visitSnapshotUsesDriveOnly({ data: { metadata: { ...driveOnlyVisit.data.metadata, scheduleSource: "dashboard visit-plan snapshot" } } })) {
+    throw new Error("Visit Drive-only snapshot validation failed.");
   }
 
   const schemaPath = path.join(REPOS, "zone", "config", "schema.json");
@@ -694,14 +769,17 @@ async function selfTest() {
   const fixtureAvailable = await access(schemaPath).then(() => true).catch(() => false);
   if (fixtureAvailable) {
     const workbookNames = (await readdir(dataPath)).filter(name => /\.xlsx$/i.test(name) && !/^~\$/.test(name));
-    if (!workbookNames.length) throw new Error("Zone parser self-test has no repository workbook fixture.");
-    const schema = JSON.parse(await readFile(schemaPath, "utf8"));
-    const fixture = path.join(dataPath, workbookNames[0]);
-    const parsed = parseZoneWorkbook(await readFile(fixture), schema, workbookNames[0]);
-    if (!parsed.rows.length || parsed.columns.length !== schema.requiredHeaders.length) {
-      throw new Error(`Zone parser self-test returned an invalid result for ${workbookNames[0]}.`);
+    if (workbookNames.length) {
+      const schema = JSON.parse(await readFile(schemaPath, "utf8"));
+      const fixture = path.join(dataPath, workbookNames[0]);
+      const parsed = parseZoneWorkbook(await readFile(fixture), schema, workbookNames[0]);
+      if (!parsed.rows.length || parsed.columns.length !== schema.requiredHeaders.length) {
+        throw new Error(`Zone parser self-test returned an invalid result for ${workbookNames[0]}.`);
+      }
+      console.log(`Zone schema parser passed: ${workbookNames[0]} / ${parsed.sheetName} (${parsed.rows.length.toLocaleString()} rows).`);
+    } else {
+      console.log("Zone repository has no raw workbook fixture; live Drive schema validation will run during the snapshot step.");
     }
-    console.log(`Zone schema parser passed: ${workbookNames[0]} / ${parsed.sheetName} (${parsed.rows.length.toLocaleString()} rows).`);
   }
   console.log(`Self-test passed (${cases.length} filename cases). Feasibility/FS1 is excluded.`);
 }
@@ -714,6 +792,9 @@ async function main() {
   if (!targets.length) {
     console.log("No supported dashboard category changed; nothing to do.");
     return;
+  }
+  if (targets.includes("visit") && clean(process.env.GOOGLE_DRIVE_FOLDER_ID) !== VISIT_DRIVE_FOLDER_ID) {
+    throw new Error(`Drive source error: GOOGLE_DRIVE_FOLDER_ID must be ${VISIT_DRIVE_FOLDER_ID} for Visit Compliance snapshots.`);
   }
   console.log(`Affected dashboards: ${targets.join(", ")}`);
   console.log(`Changed files: ${change.changed_files.join(", ") || "manual/all"}`);
