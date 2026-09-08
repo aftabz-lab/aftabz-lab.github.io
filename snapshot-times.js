@@ -5,6 +5,10 @@ const SNAPSHOT_TIME_REFRESH_MS = 1000;
 const staticFallbackCache = new Map();
 let loadPromise = null;
 const STATIC_FALLBACKS = Object.freeze({
+  "credit-card-extra-amount": {
+    url: "/credit-card-extra-amount/data/reference.json",
+    time: payload => payload?.generatedAt,
+  },
   zreport: {
     url: "/zreport-dual-dashboard/data/index.json",
     time: payload => payload?.meta?.generatedAt,
@@ -91,3 +95,4 @@ async function loadSnapshotTimesNow() {
 
 loadSnapshotTimes();
 setInterval(loadSnapshotTimes, SNAPSHOT_TIME_REFRESH_MS);
+

@@ -4,6 +4,7 @@
   const Drive = window.ShwapnoDrive;
   const SNAPSHOT_WORKER_REFRESH_MS = 1000;
   const SNAPSHOT_WORKERS = Object.freeze([
+    ["credit-card-extra-amount", "/credit-card-extra-amount/?snapshot-worker=1"],
     ["zone-distribution", "/zone-distribution-dashboard/?snapshot-worker=1"],
     ["zreport", "/zreport-dual-dashboard/?snapshot-worker=1"],
     ["visit", "/visit-compliance-dashboard/?snapshot-worker=1"],
@@ -142,3 +143,4 @@
   updateSnapshotWorkers();
   setInterval(updateSnapshotWorkers, SNAPSHOT_WORKER_REFRESH_MS);
 })();
+
