@@ -7,7 +7,7 @@
   if (!included.includes(path) || document.getElementById('shwapno-free-assistant-loader')) return;
   const loader = document.createElement('script');
   loader.id = 'shwapno-free-assistant-loader';
-  loader.src = new URL('dashboard-ai.js?v=free-ai-20261008', document.currentScript.src).href;
+  loader.src = new URL('dashboard-ai.js?v=free-ai-cpu-20261008', document.currentScript.src).href;
   loader.defer = true;
   document.head.append(loader);
 })();
