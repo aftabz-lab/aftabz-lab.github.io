@@ -1,23 +1,25 @@
-# Ask AI — concise answers
+# Ask AI — plain results
 
 Upload this patch only to **aftabz-lab/aftabz-lab.github.io**.
 
 1. Extract the ZIP.
-2. Open https://github.com/aftabz-lab/aftabz-lab.github.io on **main**.
+2. Open https://github.com/aftabz-lab/aftabz-lab.github.io and select **main**.
 3. At the repository root, choose **Add file → Upload files**.
-4. Upload these three files, replacing their existing versions:
+4. Upload these four files, replacing their existing versions:
+   - `dashboard-ai-data.js`
    - `dashboard-ai.js`
    - `azure-dashboard-chat.js`
    - `index.html`
 5. Commit and wait for GitHub Pages deployment to finish successfully.
 6. Refresh each open dashboard with **Ctrl + Shift + R**. Open **Ask AI** and press **↺** to start a new conversation.
 
-Upload the three extracted files, not the ZIP. This `SETUP.md` is only a guide.
+Upload the four extracted files, not the ZIP. `SETUP.md` is only this guide.
+No upload to separate dashboard repositories or Apps Script is needed.
 
-Ask AI now displays the direct answer without appended source names, filenames, automatic snapshot/scope details, record-scan statistics or a source footer. Generated explanations follow the same rule. Failure messages remain brief and honest; unsupported figures are not substituted.
+Ask AI no longer adds explanations about incomplete event timestamps, response-ID ordering, attendance punches, missing fields or internal processing. Latest-visit answers show the available date and matching outlets. When records share the latest date, they remain listed together. The system does not invent one sole last outlet.
 
-The existing backend checks, actual-date filtering, factual answers, required uncertainty statements and displayed list limits remain active. Keep the currently installed `dashboard-ai-data.js` and all other dashboard/runtime files.
+If requested information is missing, the reply uses a short result such as “Not available” or “No matching record found.” The previous source-footer removal remains active. Generated guidance follows the same concise style.
 
-This shared patch covers the portal, Receiving, Credit Card Extra Amount, Z-Report, Visit Compliance, Audit Quality, Zone Distribution and Pricing Control. No separate repository upload is needed. The Feasibility and New Outlet Opening Approval exclusions remain unchanged.
+This shared update covers the portal, Receiving, Credit Card Extra Amount, Z-Report, Visit Compliance, Audit Quality, Zone Distribution and Pricing Control. The Feasibility and New Outlet Opening Approval exclusions remain unchanged.
 
-The backend query engine is unchanged. Dashboard calculations, filters, exports, snapshot rules, fonts and styling are unchanged. Only Ask AI's presentation and its script version URLs change.
+The underlying record selection, date boundaries, counts, verification guards and source measures remain unchanged. Dashboard fonts, styling, calculations, filters, exports and snapshot rules remain unchanged.

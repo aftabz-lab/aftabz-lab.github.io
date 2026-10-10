@@ -73,7 +73,7 @@ export function parseDateWindow(question,data) {
   if(start?.error||end?.error)return {error:start?.error||end.error};
   if(!start||!end)return {error:'I could not verify the requested date range.'};
   const implicitYear=!start.year&&!end.year,year=start.year||end.year||reportYear(data);
-  if(!year)return {error:'Please include the year in your requested dates; this backend scope does not identify one report year.'};
+  if(!year)return {error:'Please include the year in your dates.'};
   start={...start,year:start.year||year};end={...end,year:end.year||year};
   const dayNumber=parts=>{const n=Date.UTC(parts.year,parts.month-1,parts.day),d=new Date(n);return d.getUTCFullYear()===parts.year&&d.getUTCMonth()===parts.month-1&&d.getUTCDate()===parts.day?n/86400000:null;};
   const startDay=dayNumber(start),endDay=dayNumber(end);
@@ -146,18 +146,18 @@ export async function queryBackend(question, provider, options={}) {
   let context=evidence(data,selections);
   const result=(answer,n)=>({answer:answer+sourceNote(data,count,n),context,source:data.source,recordsScanned:count,matchedRows:n,verified:true});
   if(window?.error)return result(window.error,0);
-  if(/\b(?:snapshot|refreshed|updated|freshness)\b|স্ন্যাপ|আপডেট/i.test(question))return result('Backend snapshot: '+(data.snapshot||'time not supplied')+'.');
-  if(!window&&/\b(?:filters?|selected|selection|scope|date range|period)\b|ফিল্টার/i.test(question)&&!latest(question))return result('Backend query scope: '+(data.scope||'published dashboard data')+'.\n'+(data.filters||[]).map(f=>f.label+': '+f.value).join('\n'));
+  if(/\b(?:snapshot|refreshed|updated|freshness)\b|স্ন্যাপ|আপডেট/i.test(question))return result('Snapshot: '+(data.snapshot||'not available')+'.');
+  if(!window&&/\b(?:filters?|selected|selection|scope|date range|period)\b|ফিল্টার/i.test(question)&&!latest(question))return result('Current filters:\n'+(data.filters||[]).map(f=>f.label+': '+f.value).join('\n'));
   const ambiguous=selections.find(s=>s.partial&&/officer/i.test(s.field)&&new Set(s.values.map(normal)).size>1);
   if(ambiguous)return result('More than one officer matches. Please specify the full name:\n'+ambiguous.values.join('\n'));
   const code=question.match(/\b[A-Za-z]{1,2}\d{2,5}\b/)?.[0]?.toUpperCase();
-  if(code&&!selections.some(s=>s.values.some(v=>normal(v)===normal(code))))return result('No backend record for '+code+' was found in this scope.',0);
+  if(code&&!selections.some(s=>s.values.some(v=>normal(v)===normal(code))))return result('No record found for '+code+'.',0);
   if(window){
     const candidates=data.datasets.filter(ds=>ds.latest?.field);
-    if(!candidates.length)return result('I cannot verify records for '+window.label+': this backend supplies no dated event history. An outlet’s latest-visit summary cannot establish its visits in an earlier date range.',0);
+    if(!candidates.length)return result('History for '+window.label+' is not available.',0);
     if(!selections.length){
       const vocabulary=new Set([...ignored,...tokens('list between from at on during dates date range through until did does do has have had their his her actual completed recorded response responses event transaction transactions done count number by'),...tokens(data.source+' '+data.scope),...data.datasets.flatMap(ds=>tokens(ds.title+' '+columns(ds).map(c=>c.label||c.key).join(' ')))]);
-      if(tokens(searchQuestion).some(word=>word.length>2&&!vocabulary.has(word)))return result('I cannot match the requested name or condition to a backend field. Specify the full officer name or outlet code; I will not substitute another person’s dated records.',0);
+      if(tokens(searchQuestion).some(word=>word.length>2&&!vocabulary.has(word)))return result('No matching name or outlet found. Please use the full name or outlet code.',0);
     }
     candidates.sort((a,b)=>(score(searchQuestion,b.title)+(selections.some(s=>s.dataset===b.id)?10:0))-(score(searchQuestion,a.title)+(selections.some(s=>s.dataset===a.id)?10:0)));
     const ds=candidates[0], rows=ds.rows.filter(row=>{const date=dateRank(row[ds.latest.field]);return date!=null&&eventDay(date)>=window.startDay&&eventDay(date)<=window.endDay;});
@@ -166,16 +166,16 @@ export async function queryBackend(question, provider, options={}) {
   }
   if(latest(question)) {
     const candidates=data.datasets.filter(ds=>ds.latest);
-    if(!candidates.length)return result('I cannot verify a latest visit or transaction: this backend dataset does not supply an event date.');
+    if(!candidates.length)return result('No event date is available for this request.');
     if(!selections.length){
       const vocabulary=new Set([...ignored,...tokens('did does do has have had their his her from at on actual completed recorded response event transaction transactions done'),...tokens(window?'list between during dates date range through until':''),...tokens(data.source+' '+data.scope),...data.datasets.flatMap(ds=>tokens(ds.title+' '+columns(ds).map(c=>c.label||c.key).join(' ')))]);
-      if(tokens(searchQuestion).some(word=>word.length>2&&!vocabulary.has(word)))return result('I cannot match the requested name or condition to a backend field. Specify the full officer name or outlet code; I will not substitute another person’s latest record.',0);
+      if(tokens(searchQuestion).some(word=>word.length>2&&!vocabulary.has(word)))return result('No matching name or outlet found. Please use the full name or outlet code.',0);
     }
     const ds=candidates.sort((a,b)=>score(question,b.title)-score(question,a.title))[0];
     const confirmLatest=code&&/^\s*(?:did|has|was|is)\b/i.test(question)&&/\b(?:visit|visited|assess|assessed|assessment)\b/i.test(question);
     const latestSelection=confirmLatest?selections.filter(s=>!/(?:code|Site Code)/i.test(s.field)):selections;
     const rows=matched(ds,latestSelection).map(row=>({row,date:dateRank(row[ds.latest.field])})).filter(r=>r.date!=null);
-    if(!rows.length)return result('No dated completed visit or assessment matches this request in the backend records.',0);
+    if(!rows.length)return result('No recorded visit or assessment matches this request.',0);
     const max=rows.reduce((n,r)=>Math.max(n,r.date),-Infinity);
     const day=eventDay(max), dayRows=rows.filter(r=>eventDay(r.date)===day);
     const timestampsComplete=dayRows.every(r=>hasEventTime(r.row[ds.latest.field]));
@@ -183,21 +183,20 @@ export async function queryBackend(question, provider, options={}) {
     const unique=[...new Map(final.map(r=>[JSON.stringify(r.row),r.row])).values()];
     const cols=columns(ds), keys=ds.latest.display||cols.map(c=>c.key);
     const title=unique.length===1?'Latest recorded '+(ds.latest.label||'event')+': '+dateText(max)+'.':'Latest recorded '+(ds.latest.label||'event')+' date: '+dateText(max)+'. '+unique.length+' records share that date.';
-    const uncertainty=unique.length>1&&!timestampsComplete?'\nThe backend has no complete event timestamps for these records, so I cannot determine one last outlet from their order or response IDs. Attendance punch times are shown as recorded; they are not substituted for assessment timestamps.':'';
     const codeFields=cols.filter(c=>/(?:outlet.?code|site code|^code$)/i.test(c.key));
     const includesCode=unique.some(row=>codeFields.some(c=>normal(row[c.key])===normal(code)));
-    const confirmation=confirmLatest?(includesCode?(unique.length===1?'Yes. ':'The requested outlet shares the latest date; one last outlet cannot be confirmed. '):'No. '+code+' is not among the latest recorded visits. '):'';
-    return result(confirmation+title+'\n'+unique.slice(0,12).map(row=>rowLine(row,cols,keys)).join('\n')+(unique.length>12?'\nShowing 12 of '+unique.length+' latest-date records.':'')+uncertainty,rows.length);
+    const confirmation=confirmLatest?(includesCode?(unique.length===1?'Yes. ':code+' is among the visits on this date. '):'No. '+code+' is not among the latest recorded visits. '):'';
+    return result(confirmation+title+'\n'+unique.slice(0,12).map(row=>rowLine(row,cols,keys)).join('\n')+(unique.length>12?'\nShowing 12 of '+unique.length+' latest-date records.':''),rows.length);
   }
   if(window){
     const ds=data.datasets[0], rows=matched(ds,selections).sort((a,b)=>dateRank(a[ds.latest.field])-dateRank(b[ds.latest.field]));
-    if(!rows.length)return result('No dated '+(ds.latest.label||'event')+' records match '+window.label+' in the available backend scope. Planned dates and outlet latest-visit summaries are not used as completed event dates.',0);
+    if(!rows.length)return result('No recorded '+(ds.latest.label||'event')+' matches '+window.label+'.',0);
     if(explain(question))return {answer:null,context,source:data.source,recordsScanned:count,matchedRows:rows.length,verified:true,allowAI:true};
     const cols=columns(ds), keys=ds.latest.display||cols.map(c=>c.key);
     const header=ds.title+' — '+window.label+': '+rows.length+' recorded '+(ds.latest.label||'event')+' record'+(rows.length===1?'':'s')+'.';
-    if(/\b(?:how many|count|number of)\b/i.test(question)&&/\b(?:visits?|assessments?|responses?|records?|transactions?|exceptions?)\b/i.test(question))return result(header+'\nThis counts recorded backend responses in the requested dates; it does not substitute the dashboard’s whole-period KPI.',rows.length);
+    if(/\b(?:how many|count|number of)\b/i.test(question)&&/\b(?:visits?|assessments?|responses?|records?|transactions?|exceptions?)\b/i.test(question))return result(header,rows.length);
     const wanted=Number(searchQuestion.match(/\b(?:list|show)\s+(\d{1,2})\b/i)?.[1]||20),limit=Math.min(20,Math.max(1,wanted));
-    return result(header+'\n'+rows.slice(0,limit).map(row=>rowLine(row,cols,keys)).join('\n')+(rows.length>limit?'\nShowing '+limit+' of '+rows.length+' matching dated records; the search used all backend rows.':''),rows.length);
+    return result(header+'\n'+rows.slice(0,limit).map(row=>rowLine(row,cols,keys)).join('\n')+(rows.length>limit?'\nShowing '+limit+' of '+rows.length+' matching dated records.':''),rows.length);
   }
   const scoped=data.datasets.map(ds=>{
     const rows=matched(ds,selections);
@@ -211,17 +210,17 @@ export async function queryBackend(question, provider, options={}) {
   if(!hasEntity&&facts.length&&!explain(question)&&!asksList&&!/\b(?:highest|lowest|top|bottom|largest|smallest)\b/i.test(question))return result(facts.filter(f=>f.score===facts[0].score).map(f=>f.label+': '+fmt(f.value)+(f.unit?' '+f.unit:'')).join('\n'));
   if(explain(question))return {answer:null,context,source:data.source,recordsScanned:count,verified:true,allowAI:true};
   const matching=scoped.filter(x=>x.rows.length).sort((a,b)=>b.weight-a.weight);
-  if(!matching.length)return result('No backend record matches the requested name or code.',0);
-  if(!hasEntity&&!/\b(?:summary|overview|list|show|records|outlets|banks|channels|kpis|figures|numbers|highest|lowest|top|bottom)\b/i.test(question))return result('I cannot verify that fact from the available backend fields. Specify an outlet code, full officer/leader name, metric, or latest visit.');
+  if(!matching.length)return result('No matching record found.',0);
+  if(!hasEntity&&!/\b(?:summary|overview|list|show|records|outlets|banks|channels|kpis|figures|numbers|highest|lowest|top|bottom)\b/i.test(question))return result('Please specify an outlet, full officer/leader name or metric.');
   const selected=matching[0],cols=columns(selected.ds);
   const metrics=cols.map(c=>({...c,score:score(question,(c.label||c.key)+' '+(c.aliases||[]).join(' '))})).filter(c=>c.score>0&&selected.rows.some(r=>number(r[c.key]))).sort((a,b)=>b.score-a.score);
   const ranked=/\b(?:highest|lowest|top|bottom|largest|smallest)\b/i.test(question);
   let rows=[...selected.rows];
-  if(ranked){if(!metrics.length)return result('Please specify which backend metric to rank.',rows.length);const low=/\b(?:lowest|bottom|smallest)\b/i.test(question);rows.sort((a,b)=>!number(a[metrics[0].key])?1:!number(b[metrics[0].key])?-1:(a[metrics[0].key]-b[metrics[0].key])*(low?1:-1));}
+  if(ranked){if(!metrics.length)return result('Please specify which metric to rank.',rows.length);const low=/\b(?:lowest|bottom|smallest)\b/i.test(question);rows.sort((a,b)=>!number(a[metrics[0].key])?1:!number(b[metrics[0].key])?-1:(a[metrics[0].key]-b[metrics[0].key])*(low?1:-1));}
   const wanted=Number(question.match(/\b(?:top|bottom|list|show)\s+(\d{1,2})\b/i)?.[1]||8),limit=Math.min(20,Math.max(1,wanted));
   const ids=cols.filter(c=>/code|name|officer|RHO|Zonal|leader|date|month|bank/i.test(c.key));
   const chosen=metrics.length?[...new Set([...ids.map(c=>c.key),...metrics.filter(c=>c.score===metrics[0].score).map(c=>c.key)])]:null;
-  return result(selected.ds.title+':\n'+rows.slice(0,limit).map(row=>rowLine(row,cols,chosen)).join('\n')+(rows.length>limit?'\nShowing '+limit+' of '+rows.length+' matching backend records; the search used all rows.':''),rows.length);
+  return result(selected.ds.title+':\n'+rows.slice(0,limit).map(row=>rowLine(row,cols,chosen)).join('\n')+(rows.length>limit?'\nShowing '+limit+' of '+rows.length+' matching records.':''),rows.length);
 }
 export function groundedExplanation(reply, context) {
   const s=String(reply||'').trim();if(!s)return false;
@@ -233,4 +232,5 @@ export function groundedExplanation(reply, context) {
   return true;
 }
 if(typeof window!=='undefined')window.ShwapnoBackendQueries=Object.freeze({queryBackend,groundedExplanation});
+
 

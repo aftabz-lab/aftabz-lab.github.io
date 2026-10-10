@@ -7,9 +7,10 @@
   if (!included.includes(path) || document.getElementById('shwapno-free-assistant-loader')) return;
   const loader = document.createElement('script');
   loader.id = 'shwapno-free-assistant-loader';
-  loader.src = new URL('dashboard-ai.js?v=concise-answers-v3-20261010', document.currentScript.src).href;
+  loader.src = new URL('dashboard-ai.js?v=plain-results-v4-20261010', document.currentScript.src).href;
   loader.defer = true;
   document.head.append(loader);
 })();
+
 
 
