@@ -101,7 +101,7 @@
       if (backendLoading) return backendLoading;
       backendLoading = new Promise((resolve,reject) => {
         const node=document.createElement('script'); node.type='module';
-        node.src=new URL('dashboard-ai-data.js?v=backend-data-v1-20261009',base).href;
+        node.src=new URL('dashboard-ai-data.js?v=backend-date-range-v2-20261009',base).href;
         const timer=setTimeout(()=>{node.remove();reject(new Error('The backend query module took too long to load.'));},30000);
         node.onload=()=>{clearTimeout(timer);window.ShwapnoBackendQueries?resolve(window.ShwapnoBackendQueries):reject(new Error('Backend query module unavailable.'));};
         node.onerror=()=>{clearTimeout(timer);node.remove();reject(new Error('The backend query module could not load.'));};
@@ -220,3 +220,4 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true}); else start();
 })();
+
